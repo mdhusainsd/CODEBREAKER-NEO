@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeBreaker Neo</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0a0a2e 0%, #1a1a4e 100%);
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 191, 255, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 600px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 300;
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(45deg, #00ff87, #60efff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(96, 239, 255, 0.3);
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 2rem 0;
+            justify-content: center;
+        }
+
+        .digit-input {
+            width: 70px;
+            height: 70px;
+            font-size: 2.5rem;
+            text-align: center;
+            border: 2px solid #3a3a5e;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+            color: #00ff87;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            caret-color: transparent;
+        }
+
+        .digit-input:focus {
+            outline: none;
+            border-color: #60efff;
+            box-shadow: 0 0 20px rgba(96, 239, 255, 0.3);
+            transform: scale(1.05);
+        }
+
+        .result-container {
+            margin: 2rem 0;
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .guess-row {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            animation: slideIn 0.5s ease;
+        }
+
+        .guess-digit {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            background: rgba(255,255,255,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .correct {
+            background: #00ff87 !important;
+            color: #000;
+        }
+
+        .present {
+            background: #ffd700 !important;
+            color: #000;
+        }
+
+        .absent {
+            background: #ff4654 !important;
+        }
+
+        .reset-btn {
+            background: linear-gradient(45deg, #ff4654, #ff6b6b);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: block;
+            margin: 2rem auto 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .reset-btn:hover {
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 1.5rem;
+            }
+
+            .digit-input {
+                width: 50px;
+                height: 50px;
+                font-size: 1.8rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .guess-digit {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Popup styles */
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .popup.active {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .popup-content {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(0, 191, 255, 0.2);
+            backdrop-filter: blur(10px);
+            max-width: 500px;
+            text-align: center;
+        }
+
+        .popup h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, #00ff87, #60efff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(96, 239, 255, 0.3);
+        }
+
+        .popup p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+        }
+
+        .close-btn {
+            background: linear-gradient(45deg, #ff4654, #ff6b6b);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .close-btn:hover {
+            transform: scale(1.05) rotate(-2deg);
+        }
+        
+        
+   
+    /* Existing styles */
+
+    .popup ul {
+        list-style-type: disc; /* Add bullet points */
+        padding-left: 20px; /* Indent for bullet points */
+        text-align: left; /* Align text to the left */
+    }
+
+    .popup ul li {
+        font-size: 1.1rem;
+        margin-bottom: 0.8rem;
+    }
+
+  
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap');
+
+body {
+    font-family: 'Noto Sans Bengali', sans-serif;
+}
+.correct, .present, .absent {
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+  
+    </style>
+</head>
+<body>
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <h2>How to Play</h2>
+            <p> স্বাগতম <b> CodeBreaker Neo</b> -তে! আপনার লক্ষ্য হলো একটি<b> ৪-সংখ্যার গোপন কোড</b> অনুমান করা। প্রতিবার অনুমানের পর আপনি কিছু ফিডব্যাক পাররে:</</p>
+            <ul>
+              
+                <li><span class="correct" style="background: #00ff87;">Green</span> মানে সঠিক ডিজিট সঠিক স্থানে।</li>
+                <li><span class="present" style="background: #ffd700;">Yellow</span> মানে সঠিক ডিজিট ভুল স্থানে।</li>
+                <li><span class="absent" style="background: #ff4654;">Red</span> মানে ডিজিট ভুল</li>
+            </ul>
+            <button class="close-btn" onclick="startGame()">Close</button>
+        </div>
+    </div>
+
+    <div class="game-container">
+        <h1>CODEBREAKER NEO</h1>
+        <div class="input-grid">
+            <input class="digit-input" type="number" min="0" max="9" data-index="0">
+            <input class="digit-input" type="number" min="0" max="9" data-index="1">
+            <input class="digit-input" type="number" min="0" max="9" data-index="2">
+            <input class="digit-input" type="number" min="0" max="9" data-index="3">
+        </div>
+        <div class="result-container" id="results"></div>
+        <button class="reset-btn" onclick="newGame()">New Game</button>
+    </div>
+
+    <script>
+        let secretCode;
+        
+        function generateSecretCode() {
+            let digits = [];
+            while(digits.length < 4) {
+                let num = Math.floor(Math.random() * 10);
+                if(!digits.includes(num)) digits.push(num);
+            }
+            return digits.join('');
+        }
+
+        function startGame() {
+            secretCode = generateSecretCode();
+            document.getElementById('popup').classList.remove('active');
+            document.getElementById('results').innerHTML = '';
+            clearInputs();
+        }
+
+        function autoVerify() {
+            const inputs = Array.from(document.querySelectorAll('.digit-input'));
+            if(inputs.every(input => input.value !== '')) {
+                checkGuess();
+            }
+        }
+
+        function checkGuess() {
+            const inputs = document.querySelectorAll('.digit-input');
+            let guess = Array.from(inputs).map(input => input.value).join('');
+            
+            if(new Set(guess).size < 4) {
+                alert('All digits must be unique!');
+                return;
+            }
+
+            let result = [];
+            let tempSecret = secretCode.split('');
+            let tempGuess = guess.split('');
+
+            // Check correct positions first
+            for(let i = 0; i < 4; i++) {
+                if(tempGuess[i] === tempSecret[i]) {
+                    result.push({digit: tempGuess[i], status: 'correct'});
+                    tempSecret[i] = null;
+                    tempGuess[i] = null;
+                }
+            }
+
+            // Check present digits
+            for(let i = 0; i < 4; i++) {
+                if(tempGuess[i] !== null) {
+                    let foundIndex = tempSecret.indexOf(tempGuess[i]);
+                    if(foundIndex > -1) {
+                        result.push({digit: tempGuess[i], status: 'present'});
+                        tempSecret[foundIndex] = null;
+                    } else {
+                        result.push({digit: tempGuess[i], status: 'absent'});
+                    }
+                }
+            }
+
+            // Sort results by original position
+            result.sort((a,b) => guess.indexOf(a.digit) - guess.indexOf(b.digit));
+            
+            displayResult(result);
+            clearInputs();
+        }
+
+        function displayResult(result) {
+            const resultContainer = document.getElementById('results');
+            const row = document.createElement('div');
+            row.className = 'guess-row';
+
+            result.forEach(({digit, status}) => {
+                const digitDiv = document.createElement('div');
+                digitDiv.className = `guess-digit ${status}`;
+                digitDiv.textContent = digit;
+                row.appendChild(digitDiv);
+            });
+
+            resultContainer.prepend(row);
+        }
+
+        function clearInputs() {
+            document.querySelectorAll('.digit-input').forEach(input => {
+                input.value = '';
+            });
+            document.querySelector('.digit-input').focus();
+        }
+
+        function newGame() {
+            secretCode = generateSecretCode();
+            document.getElementById('results').innerHTML = '';
+            clearInputs();
+        }
+
+        // Input handling
+        document.querySelectorAll('.digit-input').forEach((input, index, inputs) => {
+            input.addEventListener('input', (e) => {
+                if(e.target.value.length > 0) {
+                    if(index < 3) inputs[index + 1].focus();
+                    autoVerify();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if(e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Prevent non-digit input
+        document.querySelectorAll('.digit-input').forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if(e.key < '0' || e.key > '9') e.preventDefault();
+            });
+        });
+
+        // Show popup when the page loads
+        window.onload = function() {
+            document.getElementById('popup').classList.add('active');
+        }
+    </script>
+</body>
+</html>
